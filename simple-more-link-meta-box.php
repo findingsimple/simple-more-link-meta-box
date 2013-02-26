@@ -68,9 +68,9 @@ class Simple_More_Link_Meta_Box {
 		/* Save the meta boxes data on the 'save_post' hook. */
 		add_action( 'save_post', array( __CLASS__, 'simple_mlmb_save' ) , 10, 2 );
 		
-		/* Filter the More link text */
-		add_filter('the_content_more_link', array( __CLASS__, 'simple_mlmb_filter_link_text' ) );
-		
+		/* Filter the More link */
+		add_filter('the_content_more_link', array( __CLASS__, 'simple_mlmb_filter_link' ) );
+
 	}
 
 	/* Adds custom meta boxes to the theme settings page. */
@@ -98,6 +98,10 @@ class Simple_More_Link_Meta_Box {
 		wp_nonce_field( basename( __FILE__ ), 'simple-mlmb-nonce' );
 								
 		$more_link_text = esc_attr( get_post_meta( $object->ID, '_simple_mlmb_link_text' , true) ); 
+		
+		$remove_scroll = get_post_meta( $object->ID , '_simple_mlmb_remove_scroll' , true);
+		
+		$remove_scroll = ( !empty( $remove_scroll ) ) ? esc_attr( $remove_scroll ) : 'no' ;
 																					
 	?>		
 
@@ -107,6 +111,17 @@ class Simple_More_Link_Meta_Box {
 			<input name='more-link-text' id='more-link-text' value='<?php echo $more_link_text ?>' class="widefat" />	
 			<br />
 			<span style="color:#aaa;">Set custom more link text. If blank the default more link text set by WP or your theme will be used</span>
+		</p>
+		
+		<p>
+			<label for="remove-scroll"><?php _e( 'Prevent Page Scroll:', self::$text_domain ); ?></label>
+			<br />
+			<select name='remove-scroll' id='remove-scroll'>
+				<option value="yes" <?php selected( $remove_scroll, 'yes' ); ?> >yes</option>
+				<option value="no" <?php selected( $remove_scroll, 'no' ); ?> >no</option>
+			</select>	
+			<br />
+			<span style="color:#aaa;">By default, clicking the .more-link anchor opens the web document and scrolls the page to section of the document containing the named anchor (#more-000). Select Yes to prevent this scroll effect.</span>
 		</p>
 						
 	<?php
@@ -128,9 +143,10 @@ class Simple_More_Link_Meta_Box {
 			return $post_id;
 
 		$meta = array(
-			'_simple_mlmb_link_text' => strip_tags( $_POST['more-link-text'] )
+			'_simple_mlmb_link_text' => strip_tags( $_POST['more-link-text'] ),
+			'_simple_mlmb_remove_scroll' => strip_tags( $_POST['remove-scroll'] )
 		);
-
+		
 		foreach ( $meta as $meta_key => $new_meta_value ) {
 
 			/* Get the meta value of the custom field key. */
@@ -155,18 +171,24 @@ class Simple_More_Link_Meta_Box {
 	 * Filter 'the_content_more_link' to apply custom more link text.
 	 *
 	 */
-	public static function simple_mlmb_filter_link_text( $more_link ) {
+	public static function simple_mlmb_filter_link( $more_link ) {
 	
 		global $post;
 		
 		$more_link_text = esc_attr( get_post_meta( $post->ID, '_simple_mlmb_link_text' , true) );
 		
- 		$more_link = preg_replace( '/<a(.+?)>.+?<\/a>/i', "<a$1>$more_link_text</a>" , $more_link );
+		if ( !empty( $more_link_text ) )
+ 			$more_link = preg_replace( '/<a(.+?)>.+?<\/a>/i', "<a$1>$more_link_text</a>" , $more_link );
+ 
+ 		$remove_scroll = get_post_meta( $post->ID, '_simple_mlmb_remove_scroll' , true) ;
 		
+ 		if ( $remove_scroll == 'yes' )
+ 			$more_link = preg_replace( '|#more-[0-9]+|', '', $more_link );
+ 
 		return $more_link;
 		
 	}	
-
+	
 }
 
 endif;
