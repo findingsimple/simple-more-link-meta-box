@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 if ( ! class_exists( 'Simple_More_Link_Meta_Box' ) ) :
 
 /**
- * So that themes and other plugins can customise the text domain, the Simple_Quotes
+ * So that themes and other plugins can customise the text domain, the Simple_More_Link_Meta_Box
  * should not be initialized until after the plugins_loaded and after_setup_theme hooks.
  * However, it also needs to run early on the init hook.
  *
